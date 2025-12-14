@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Сотрудники - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-badge"></i> Сотрудники</h1>
+    {% if has_permission_global('add_employees') %}
+    <a href="{{ url_for('add_employee') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Добавить сотрудника
+    </a>
+    {% endif %}
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('employees') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="ID, ФИО, телефон, должность">
+            </div>
+            <div class="col-md-2">
+                <label for="position" class="form-label">Должность</label>
+                <select class="form-select" id="position" name="position">
+                    <option value="">Все должности</option>
+                    {% for p in positions %}
+                    <option value="{{ p }}" {% if position_filter == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Статус</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Все</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Работает</option>
+                    <option value="dismissed" {% if status_filter == 'dismissed' %}selected{% endif %}>Уволен</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="sort" class="form-label">Сортировать по</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="ID_Сотрудника" {% if sort == 'ID_Сотрудника' %}selected{% endif %}>ID</option>
+                    <option value="ФИО" {% if sort == 'ФИО' %}selected{% endif %}>ФИО</option>
+                    <option value="Должность" {% if sort == 'Должность' %}selected{% endif %}>Должность</option>
+                    <option value="Дата_приема" {% if sort == 'Дата_приема' %}selected{% endif %}>Дата приема</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Порядок</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Применить
+                </button>
+                <a href="{{ url_for('employees') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ФИО</th>
+                    <th>Должность</th>
+                    <th>Дата приёма</th>
+                    <th>Дата увольнения</th>
+                    <th>Телефон</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.ID_Сотрудника }}</td>
+                    <td>{{ employee.ФИО_Сотрудника }}</td>
+                    <td>{{ employee.Должность }}</td>
+                    <td>{{ employee.Дата_Приёма }}</td>
+                    <td>{{ employee.Дата_Увольнения or '-' }}</td>
+                    <td>{{ employee.Телефон_Сотрудника }}</td>
+                    <td>
+                        {% if employee.Дата_Увольнения %}
+                            <span class="badge bg-secondary">Уволен</span>
+                        {% else %}
+                            <span class="badge bg-success">Работает</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            {% if has_permission_global('edit_employees') %}
+                            <a href="{{ url_for('edit_employee', id=employee.ID_Сотрудника) }}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if not employee.Дата_Увольнения and employee.Должность != 'Администратор' %}
+                                {% if has_permission_global('dismiss_employees') %}
+                                <form method="POST" action="{{ url_for('dismiss_employee', id=employee.ID_Сотрудника) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Уволить сотрудника?')">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                            {% if not has_permission_global('edit_employees') and (employee.Дата_Увольнения or employee.Должность == 'Администратор' or not has_permission_global('dismiss_employees')) %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center">Сотрудники не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

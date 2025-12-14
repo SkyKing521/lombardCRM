@@ -1,0 +1,11 @@
+Quart>=0.20.0
+SQLAlchemy[asyncio]>=2.0.23
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.0
+quart-auth>=0.6.0
+werkzeug>=3.0.0
+python-dotenv>=1.0.0
+Jinja2>=3.1.2
+uvicorn[standard]>=0.24.0
+python-dateutil>=2.8.2
+

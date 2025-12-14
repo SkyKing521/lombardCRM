@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать клиента - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0"><i class="bi bi-pencil"></i> Редактировать клиента</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="fio" class="form-label">ФИО</label>
+                <input type="text" class="form-control" id="fio" name="fio" value="{{ client.ФИО }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ client.Телефон }}" required pattern="[0-9]{11}">
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{{ url_for('clients') }}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

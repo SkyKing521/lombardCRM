@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Займы - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cash-coin"></i> Займы</h1>
+    {% if has_permission_global('add_loans') %}
+    <a href="{{ url_for('add_loan') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Оформить займ
+    </a>
+    {% endif %}
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('loans') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Код займа, клиент, товар, категория, артикул, размер, срок">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Статус</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Все статусы</option>
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Сортировать по</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="Код_займа" {% if sort == 'Код_займа' %}selected{% endif %}>Код</option>
+                    <option value="Дата" {% if sort == 'Дата' %}selected{% endif %}>Дата</option>
+                    <option value="Размер" {% if sort == 'Размер' %}selected{% endif %}>Размер займа</option>
+                    <option value="Срок" {% if sort == 'Срок' %}selected{% endif %}>Срок</option>
+                    <option value="Состояние" {% if sort == 'Состояние' %}selected{% endif %}>Состояние</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Порядок</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Применить
+                </button>
+                <a href="{{ url_for('loans') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Код</th>
+                    <th>Дата</th>
+                    <th>Дата окончания</th>
+                    <th>Клиент</th>
+                    <th>Размер займа</th>
+                    <th>Срок</th>
+                    <th>Состояние</th>
+                    <th>Товар</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in loans %}
+                {% set loan = item.loan %}
+                {% set end_date = item.end_date %}
+                {% set days_left = item.days_left %}
+                <tr>
+                    <td>{{ loan.Код_займа }}</td>
+                    <td>{{ loan.Дата_займа }}</td>
+                    <td>
+                        {{ end_date }}
+                        {% if loan.Статус_займа == 'Активен' and days_left is not none %}
+                            {% if days_left > 0 %}
+                                <br><small class="text-muted">Осталось {{ days_left }} дн.</small>
+                            {% elif days_left == 0 %}
+                                <br><small class="text-warning">Истекает сегодня</small>
+                            {% else %}
+                                <br><small class="text-danger">Просрочен на {{ -days_left }} дн.</small>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ loan.client.ФИО }}</td>
+                    <td>{{ "{:,.2f}".format(loan.Размер_займа) }} ₽</td>
+                    <td>{{ loan.Срок_займа }} мес.</td>
+                    <td>
+                        {% if loan.Статус_займа == 'Выплачен' %}
+                            <span class="badge bg-success">{{ loan.Статус_займа }}</span>
+                        {% elif loan.Статус_займа == 'Просрочен' %}
+                            <span class="badge bg-danger">{{ loan.Статус_займа }}</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ loan.Статус_займа }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ loan.Наименование_товара }}</td>
+                    <td>
+                        <a href="{{ url_for('loan_detail', id=loan.Код_займа) }}" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center">Займы не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

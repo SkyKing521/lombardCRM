@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Оформить займ - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-cash-stack"></i> Оформить новый займ</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="date" class="form-label">
+                        <i class="bi bi-calendar3"></i> Дата займа
+                    </label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="client_id" class="form-label">Клиент</label>
+                    <select class="form-select" id="client_id" name="client_id" required>
+                        <option value="">Выберите клиента</option>
+                        {% for client in clients %}
+                        <option value="{{ client.ID_Клиента }}">{{ client.ФИО }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="amount" class="form-label">Размер займа (₽)</label>
+                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="0">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="term" class="form-label">Срок займа (мес.)</label>
+                    <select class="form-select" id="term" name="term" required>
+                        <option value="5.00">5 месяцев</option>
+                        <option value="6.25">6.25 месяцев</option>
+                        <option value="7.50">7.5 месяцев</option>
+                        <option value="8.75">8.75 месяцев</option>
+                        <option value="10.00">10 месяцев</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="condition" class="form-label">Процент по займу (%)</label>
+                    <input type="number" step="0.01" class="form-control" id="condition" name="condition" required min="0" max="100" placeholder="5.00">
+                    <small class="form-text text-muted">Введите процент состояния товара (например: 5.00, 7.50, 10.00)</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="employee_id" class="form-label">Исполнитель</label>
+                    <select class="form-select" id="employee_id" name="employee_id" required>
+                        <option value="">Выберите сотрудника</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.ID_Сотрудника }}">{{ employee.ФИО_Сотрудника }} ({{ employee.Должность }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Артикул товара будет автоматически равен коду займа -->
+            <div class="mb-3">
+                <label for="name" class="form-label">Наименование товара</label>
+                <input type="text" class="form-control" id="name" name="name" required list="name-list" autocomplete="off">
+                <datalist id="name-list"></datalist>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="category" class="form-label">Категория товара</label>
+                    <input type="text" class="form-control" id="category" name="category" required list="category-list" autocomplete="off">
+                    <datalist id="category-list"></datalist>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="physical_condition" class="form-label">Физическое состояние</label>
+                    <select class="form-select" id="physical_condition" name="physical_condition" required>
+                        <option value="Отличное">Отличное</option>
+                        <option value="Хорошее">Хорошее</option>
+                        <option value="Удовлетворительное">Удовлетворительное</option>
+                        <option value="Плохое">Плохое</option>
+                        <option value="Ужасное">Ужасное</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Оформить займ</button>
+            <a href="{% if request.args.get('from_index') %}{{ url_for('index') }}{% else %}{{ url_for('loans') }}{% endif %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Загружаем данные для автозаполнения
+    fetch('/api/loan-autocomplete')
+        .then(response => response.json())
+        .then(data => {
+            // Заполняем datalist для наименований
+            const nameList = document.getElementById('name-list');
+            data.names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                nameList.appendChild(option);
+            });
+            
+            // Заполняем datalist для категорий
+            const categoryList = document.getElementById('category-list');
+            data.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                categoryList.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки данных автозаполнения:', error);
+        });
+});
+</script>
+{% endblock %}
+

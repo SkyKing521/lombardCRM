@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Оформить продажу - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-cart-plus"></i> Оформить продажу</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="date" class="form-label">
+                    <i class="bi bi-calendar3"></i> Дата продажи
+                </label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ request.args.get('date', '') }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="article_id" class="form-label">Невостребованный товар</label>
+                {% if unclaimed_items %}
+                <select class="form-select" id="article_id" name="article_id" required>
+                    <option value="">Выберите товар</option>
+                    {% for item in unclaimed_items %}
+                    <option value="{{ item.Артикул }}" {% if request.args.get('article_id')|int == item.Артикул %}selected{% endif %}>
+                        Артикул {{ item.Артикул }} - {{ item.loan.Наименование_товара if item.loan else 'N/A' }} 
+                        ({{ "{:,.2f}".format(item.Оценочная_стоимость) }} ₽)
+                    </option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <div class="alert alert-warning">
+                    Нет доступных товаров для продажи. Все невостребованные товары уже проданы.
+                </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="seller_id" class="form-label">Продавец</label>
+                <select class="form-select" id="seller_id" name="seller_id" required>
+                    <option value="">Выберите продавца</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.ID_Сотрудника }}">{{ employee.ФИО_Сотрудника }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Оформить продажу</button>
+            <a href="{% if request.args.get('from_index') %}{{ url_for('index') }}{% else %}{{ url_for('sales') }}{% endif %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

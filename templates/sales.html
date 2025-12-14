@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Продажи - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cart-check"></i> Продажи</h1>
+    {% if has_permission_global('add_sales') %}
+    <a href="{{ url_for('add_sale') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Оформить продажу
+    </a>
+    {% endif %}
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('sales') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Код продажи, артикул, код займа, клиент, товар, продавец">
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">Дата от</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" 
+                       value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">Дата до</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" 
+                       value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Сортировать по</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="Код_продажи" {% if sort == 'Код_продажи' %}selected{% endif %}>Код продажи</option>
+                    <option value="Дата" {% if sort == 'Дата' %}selected{% endif %}>Дата</option>
+                    <option value="Артикул" {% if sort == 'Артикул' %}selected{% endif %}>Артикул</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="order" class="form-label">Порядок</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Применить
+                </button>
+                <a href="{{ url_for('sales') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Код продажи</th>
+                    <th>Дата продажи</th>
+                    <th>Артикул товара</th>
+                    <th>Код займа</th>
+                    <th>Товар</th>
+                    <th>Оценочная стоимость</th>
+                    <th>Продавец</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td>{{ sale.Код_продажи }}</td>
+                    <td>{{ sale.Дата_продажи }}</td>
+                    <td>{{ sale.Артикул_проданного_товара }}</td>
+                    <td>
+                        {% if sale.item and sale.item.loan %}
+                        <a href="{{ url_for('loan_detail', id=sale.item.Займ) }}" class="text-decoration-none">
+                            {{ sale.item.Займ }}
+                        </a>
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ sale.item.loan.Наименование_товара if sale.item and sale.item.loan else 'N/A' }}</td>
+                    <td><strong>{{ "{:,.2f}".format(sale.item.Оценочная_стоимость) if sale.item else 'N/A' }} ₽</strong></td>
+                    <td>{{ sale.seller.ФИО_Сотрудника if sale.seller else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">Продажи не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

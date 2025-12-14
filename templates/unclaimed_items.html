@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Невостребованные товары - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-box-seam"></i> Невостребованные товары</h1>
+</div>
+
+<!-- Фильтры и поиск -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('unclaimed_items') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Артикул, код займа, стоимость, клиент, товар, категория">
+            </div>
+            <div class="col-md-2">
+                <label for="min_price" class="form-label">Цена от</label>
+                <input type="number" class="form-control" id="min_price" name="min_price" 
+                       value="{{ min_price }}" placeholder="0" step="0.01">
+            </div>
+            <div class="col-md-2">
+                <label for="max_price" class="form-label">Цена до</label>
+                <input type="number" class="form-control" id="max_price" name="max_price" 
+                       value="{{ max_price }}" placeholder="999999" step="0.01">
+            </div>
+            <div class="col-md-2">
+                <label for="sort" class="form-label">Сортировать по</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="Артикул" {% if sort == 'Артикул' %}selected{% endif %}>Артикул</option>
+                    <option value="Стоимость" {% if sort == 'Стоимость' %}selected{% endif %}>Стоимость</option>
+                    <option value="Займ" {% if sort == 'Займ' %}selected{% endif %}>Код займа</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Порядок</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Применить
+                </button>
+                <a href="{{ url_for('unclaimed_items') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Артикул</th>
+                    <th>Код займа</th>
+                    <th>Клиент</th>
+                    <th>Товар</th>
+                    <th>Оценочная стоимость</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.Артикул }}</td>
+                    <td>
+                        <a href="{{ url_for('loan_detail', id=item.Займ) }}" class="text-decoration-none">
+                            {{ item.Займ }}
+                        </a>
+                    </td>
+                    <td>{{ item.loan.client.ФИО if item.loan else 'N/A' }}</td>
+                    <td>{{ item.loan.Наименование_товара if item.loan else 'N/A' }}</td>
+                    <td><strong>{{ "{:,.2f}".format(item.Оценочная_стоимость) }} ₽</strong></td>
+                    <td>
+                        {% if item.sales %}
+                            <span class="badge bg-success">Продан</span>
+                            {% for sale in item.sales %}
+                            <br><small><a href="{{ url_for('sales') }}?search={{ sale.Код_продажи }}" class="text-decoration-none">Продажа #{{ sale.Код_продажи }}</a></small>
+                            {% endfor %}
+                        {% else %}
+                            {% if has_permission_global('add_sales') %}
+                            <a href="{{ url_for('add_sale') }}?article_id={{ item.Артикул }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-cart-plus"></i> Продать
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">Невостребованные товары не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать сотрудника - CRM Ломбард{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0"><i class="bi bi-pencil"></i> Редактировать сотрудника</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="fio" class="form-label">ФИО</label>
+                <input type="text" class="form-control" id="fio" name="fio" value="{{ employee.ФИО_Сотрудника }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="position" class="form-label">Должность</label>
+                <select class="form-select" id="position" name="position" required>
+                    <option value="Оценщик-товаровед" {% if employee.Должность == 'Оценщик-товаровед' %}selected{% endif %}>Оценщик-товаровед</option>
+                    <option value="Менеджер-товаровед" {% if employee.Должность == 'Менеджер-товаровед' %}selected{% endif %}>Менеджер-товаровед</option>
+                    <option value="Менеджер по продажам" {% if employee.Должность == 'Менеджер по продажам' %}selected{% endif %}>Менеджер по продажам</option>
+                    {% if current_user.Должность == 'Администратор' %}
+                    <option value="Администратор" {% if employee.Должность == 'Администратор' %}selected{% endif %}>Администратор</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="hire_date" class="form-label">
+                    <i class="bi bi-calendar3"></i> Дата приёма
+                </label>
+                <input type="date" class="form-control" id="hire_date" name="hire_date" 
+                       value="{{ employee.Дата_Приёма.strftime('%Y-%m-%d') if employee.Дата_Приёма else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Телефон</label>
+                <input type="text" class="form-control" id="phone" name="phone" 
+                       value="{{ employee.Телефон_Сотрудника }}" required pattern="[0-9]{11}">
+                <small class="form-text text-muted">Формат: 11 цифр (например: 79078767460)</small>
+            </div>
+            <div class="mb-3">
+                <label for="login" class="form-label">Логин</label>
+                <input type="text" class="form-control" id="login" name="login" value="{{ employee.Логин }}" required>
+                <small class="form-text text-muted">Уникальный логин для входа в систему</small>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Новый пароль</label>
+                <input type="password" class="form-control" id="password" name="password" minlength="6">
+                <small class="form-text text-muted">Оставьте пустым, если не хотите менять пароль. Минимум 6 символов.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{{ url_for('employees') }}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

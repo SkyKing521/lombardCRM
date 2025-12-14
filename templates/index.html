@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - CRM Ломбард{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-speedometer2"></i> Панель управления</h1>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h3>{{ stats.total_clients }}</h3>
+            <p class="mb-0"><i class="bi bi-people"></i> Всего клиентов</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <h3>{{ stats.active_loans }}</h3>
+            <p class="mb-0"><i class="bi bi-cash-coin"></i> Активных займов</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <h3>{{ stats.overdue_loans }}</h3>
+            <p class="mb-0"><i class="bi bi-exclamation-triangle"></i> Просроченных займов</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+            <h3>{{ stats.total_sales }}</h3>
+            <p class="mb-0"><i class="bi bi-cart-check"></i> Всего продаж</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge"></i> Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        {% if has_permission_global('add_clients') %}
+                        <a href="{{ url_for('add_client', from_index=1) }}" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-person-plus"></i> Добавить клиента
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {% if has_permission_global('add_loans') %}
+                        <a href="{{ url_for('add_loan', from_index=1) }}" class="btn btn-success w-100 mb-2">
+                            <i class="bi bi-cash-stack"></i> Оформить займ
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {% if has_permission_global('add_sales') %}
+                        <a href="{{ url_for('add_sale', from_index=1) }}" class="btn btn-warning w-100 mb-2">
+                            <i class="bi bi-cart-plus"></i> Оформить продажу
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {% if has_permission_global('view_reports') %}
+                        <a href="{{ url_for('reports') }}" class="btn btn-info w-100 mb-2">
+                            <i class="bi bi-file-earmark-text"></i> Сформировать отчет
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not has_permission_global('add_clients') and not has_permission_global('add_loans') and not has_permission_global('add_sales') and not has_permission_global('view_reports') %}
+                <p class="text-muted text-center">Нет доступных действий</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Отчеты - CRM Ломбард{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-graph-up"></i> Отчеты</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-range"></i> Квартальный отчет</h5>
+            </div>
+            <div class="card-body">
+                <form id="quarterlyForm">
+                    <div class="mb-3">
+                        <label for="year" class="form-label">Год</label>
+                        <select class="form-select" id="year" name="year">
+                            {% for year in available_years %}
+                            <option value="{{ year }}" {% if loop.first %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quarter" class="form-label">Квартал</label>
+                        <select class="form-select" id="quarter" name="quarter">
+                            <!-- Опции будут заполнены через JavaScript -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сформировать отчет</button>
+                </form>
+                <div id="quarterlyReport" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Статистика по займам</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="loansChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Данные о доступных кварталах для каждого года
+    const yearQuarters = {{ year_quarters | tojson }};
+    
+    // Функция для обновления списка кварталов при изменении года
+    function updateQuarters() {
+        const yearSelect = document.getElementById('year');
+        const quarterSelect = document.getElementById('quarter');
+        const selectedYear = parseInt(yearSelect.value);
+        
+        // Очищаем список кварталов
+        quarterSelect.innerHTML = '';
+        
+        // Добавляем доступные кварталы для выбранного года
+        if (yearQuarters[selectedYear] && yearQuarters[selectedYear].length > 0) {
+            yearQuarters[selectedYear].forEach(function(quarter) {
+                const option = document.createElement('option');
+                option.value = quarter;
+                option.textContent = quarter + ' квартал';
+                quarterSelect.appendChild(option);
+            });
+        } else {
+            // Если нет доступных кварталов, показываем сообщение
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Нет данных';
+            option.disabled = true;
+            quarterSelect.appendChild(option);
+        }
+    }
+    
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        updateQuarters();
+        
+        // Обновляем кварталы при изменении года
+        document.getElementById('year').addEventListener('change', updateQuarters);
+    });
+    
+    // Квартальный отчет
+    document.getElementById('quarterlyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const year = document.getElementById('year').value;
+        const quarter = document.getElementById('quarter').value;
+        
+        const response = await fetch(`/api/reports/quarterly?year=${year}&quarter=${quarter}`);
+        const data = await response.json();
+        
+        const reportDiv = document.getElementById('quarterlyReport');
+        reportDiv.innerHTML = `
+            <h6>Отчет за ${quarter} квартал ${year} года</h6>
+            <table class="table">
+                <tr><th>Всего займов:</th><td>${data.total_loans}</td></tr>
+                <tr><th>Общая сумма займов:</th><td>${data.total_loan_amount.toLocaleString('ru-RU')} ₽</td></tr>
+                <tr><th>Выплаченных займов:</th><td>${data.paid_loans}</td></tr>
+                <tr><th>Просроченных займов:</th><td>${data.overdue_loans}</td></tr>
+                <tr><th>Всего продаж:</th><td>${data.total_sales}</td></tr>
+                <tr><th>Сумма продаж:</th><td>${data.sales_amount.toLocaleString('ru-RU')} ₽</td></tr>
+            </table>
+        `;
+    });
+    
+    // График по статусам займов
+    fetch('/api/reports/loans-status')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('loansChart').getContext('2d');
+            
+            // Маппинг статусов к цветам (поменяли местами Просрочен и Выплачен)
+            const statusColors = {
+                'Просрочен': '#e74c3c',  // Красный
+                'Выплачен': '#27ae60',   // Зеленый
+                'Активен': '#f39c12'      // Оранжевый
+            };
+            
+            // Фиксированный порядок статусов для правильного отображения
+            const statusOrder = ['Просрочен', 'Выплачен', 'Активен'];
+            const dataMap = {};
+            data.forEach(d => {
+                dataMap[d.status] = d.count;
+            });
+            
+            const labels = [];
+            const counts = [];
+            const colors = [];
+            
+            statusOrder.forEach(status => {
+                if (dataMap[status] !== undefined) {
+                    labels.push(status);
+                    counts.push(dataMap[status]);
+                    colors.push(statusColors[status]);
+                }
+            });
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}
+
